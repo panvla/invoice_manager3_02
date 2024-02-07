@@ -3,11 +3,14 @@ package com.vladimirpandurov.invoice_manager3_02.resource;
 import com.vladimirpandurov.invoice_manager3_02.domain.HttpResponse;
 import com.vladimirpandurov.invoice_manager3_02.domain.User;
 import com.vladimirpandurov.invoice_manager3_02.dto.UserDTO;
+import com.vladimirpandurov.invoice_manager3_02.form.LoginForm;
 import com.vladimirpandurov.invoice_manager3_02.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,6 +27,7 @@ import java.util.Map;
 public class UserResource {
 
     private final UserService userService;
+    private final AuthenticationManager authenticationManager;
 
     @PostMapping("/register")
     public ResponseEntity<HttpResponse> saveUser(@RequestBody @Valid User user){
@@ -35,6 +39,20 @@ public class UserResource {
                 .status(HttpStatus.OK)
                 .statusCode(HttpStatus.OK.value())
                 .message("User created")
+                .build()
+        );
+    }
+    @PostMapping("/login")
+    public ResponseEntity<HttpResponse> login(@RequestBody @Valid LoginForm loginForm){
+        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginForm.getEmail(), loginForm.getPassword()));
+        UserDTO userDTO = userService.getUserByEmail(loginForm.getEmail());
+        return ResponseEntity.ok().body(
+                HttpResponse.builder()
+                .timeStamp(LocalDateTime.now().toString())
+                .data(Map.of("user", userDTO))
+                .message("Login Success")
+                .status(HttpStatus.OK)
+                .statusCode(HttpStatus.OK.value())
                 .build()
         );
     }
