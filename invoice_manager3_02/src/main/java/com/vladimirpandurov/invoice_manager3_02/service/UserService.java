@@ -9,4 +9,5 @@ public interface UserService {
 
     UserDTO getUserByEmail(String email);
 
+    void sendVerificationCode(UserDTO userDTO);
 }

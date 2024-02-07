@@ -46,14 +46,31 @@ public class UserResource {
     public ResponseEntity<HttpResponse> login(@RequestBody @Valid LoginForm loginForm){
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginForm.getEmail(), loginForm.getPassword()));
         UserDTO userDTO = userService.getUserByEmail(loginForm.getEmail());
+        return userDTO.isUsingMfa() ? sendVerificationCode(userDTO) : sendResponse(userDTO);
+    }
+
+    private ResponseEntity<HttpResponse> sendResponse(UserDTO userDTO){
         return ResponseEntity.ok().body(
                 HttpResponse.builder()
-                .timeStamp(LocalDateTime.now().toString())
-                .data(Map.of("user", userDTO))
-                .message("Login Success")
-                .status(HttpStatus.OK)
-                .statusCode(HttpStatus.OK.value())
-                .build()
+                        .timeStamp(LocalDateTime.now().toString())
+                        .data(Map.of("user", userDTO))
+                        .message("Login Success")
+                        .status(HttpStatus.OK)
+                        .statusCode(HttpStatus.OK.value())
+                        .build()
+        );
+    }
+
+    private ResponseEntity<HttpResponse> sendVerificationCode(UserDTO userDTO){
+        this.userService.sendVerificationCode(userDTO);
+        return ResponseEntity.ok().body(
+                HttpResponse.builder()
+                        .timeStamp(LocalDateTime.now().toString())
+                        .data(Map.of("user", userDTO))
+                        .message("Verification code sent")
+                        .status(HttpStatus.OK)
+                        .statusCode(HttpStatus.OK.value())
+                        .build()
         );
     }
 
