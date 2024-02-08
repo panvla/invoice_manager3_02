@@ -1,5 +1,6 @@
 package com.vladimirpandurov.invoice_manager3_02.configuration;
 
+import com.vladimirpandurov.invoice_manager3_02.filter.CustomAuthorizationFilter;
 import com.vladimirpandurov.invoice_manager3_02.handler.CustomAccessDeniedHandler;
 import com.vladimirpandurov.invoice_manager3_02.handler.CustomAuthenticationEntryPoin;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +17,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -26,8 +28,11 @@ public class SecurityConfig {
     private final UserDetailsService userDetailsService;
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
     private final CustomAuthenticationEntryPoin customAuthenticationEntryPoin;
+    private final CustomAuthorizationFilter customAuthorizationFilter;
     private final BCryptPasswordEncoder encoder;
-    private static final String[] PUBLIC_URLS = {"/user/login/**", "/user/register/**"};
+    private static final String[] PUBLIC_URLS = {"/user/login/**", "/user/register/**", "/user/verify/code/**",
+            "/user/resetpassword/**", "/user/verify/password/**", "/user/verify/account/**",
+    "user/refresh/token/**"};
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception{
@@ -39,6 +44,7 @@ public class SecurityConfig {
 
         http.exceptionHandling().accessDeniedHandler(customAccessDeniedHandler).authenticationEntryPoint(customAuthenticationEntryPoin);
         http.authorizeHttpRequests().anyRequest().authenticated();
+        http.addFilterBefore(customAuthorizationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 
